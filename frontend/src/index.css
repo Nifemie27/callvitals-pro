@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-good: var(--good);
+    --color-good-foreground: var(--good-foreground);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+  CallVitals palette (Phase 3 design): cool blue-gray neutrals + one blue
+  accent shared between UI chrome and chart series (see dataviz-informed
+  chart-colors constants). Sidebar tokens are intentionally NOT redefined
+  under .dark — the sidebar stays a fixed dark slate in both themes, so it
+  inherits the :root values below.
+*/
+:root {
+    --background: #f4f6fa;
+    --foreground: #11141c;
+    --card: #ffffff;
+    --card-foreground: #11141c;
+    --popover: #ffffff;
+    --popover-foreground: #11141c;
+    --primary: #2a5fd6;
+    --primary-foreground: #ffffff;
+    --secondary: #eef1f6;
+    --secondary-foreground: #11141c;
+    --muted: #eef1f6;
+    --muted-foreground: #565d6d;
+    --accent: #e8eefb;
+    --accent-foreground: #2a5fd6;
+    --destructive: #d03b3b;
+    --destructive-foreground: #ffffff;
+    --good: #098006;
+    --good-foreground: #ffffff;
+    --border: #e1e5ee;
+    --input: #e1e5ee;
+    --ring: #2a5fd6;
+    --chart-1: #2a78d6;
+    --chart-2: #6a4ce0;
+    --chart-3: #098006;
+    --chart-4: #d03b3b;
+    --chart-5: #8991a3;
+    --radius: 0.625rem;
+    --sidebar: #12162a;
+    --sidebar-foreground: #aab1c8;
+    --sidebar-primary: #2a5fd6;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: rgba(255, 255, 255, 0.06);
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-ring: #2a5fd6;
+}
+
+.dark {
+    --background: #0a0c14;
+    --foreground: #f0f2f8;
+    --card: #11141e;
+    --card-foreground: #f0f2f8;
+    --popover: #11141e;
+    --popover-foreground: #f0f2f8;
+    --primary: #5c8ee8;
+    --primary-foreground: #0a0c14;
+    --secondary: #171b28;
+    --secondary-foreground: #f0f2f8;
+    --muted: #171b28;
+    --muted-foreground: #a4abc0;
+    --accent: #182544;
+    --accent-foreground: #a9c6f5;
+    --destructive: #e5695f;
+    --destructive-foreground: #0a0c14;
+    --good: #35c25b;
+    --good-foreground: #0a0c14;
+    --border: #262c3d;
+    --input: #262c3d;
+    --ring: #5c8ee8;
+    --chart-1: #5c8ee8;
+    --chart-2: #9085e9;
+    --chart-3: #35c25b;
+    --chart-4: #e5695f;
+    --chart-5: #6d7488;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+
+/* Reports export: force light surfaces regardless of active theme, and
+   let the table breathe full-width without the app shell around it. */
+@media print {
+  :root {
+    --background: #ffffff;
+    --foreground: #11141c;
+    --card: #ffffff;
+    --card-foreground: #11141c;
+    --muted: #eef1f6;
+    --muted-foreground: #565d6d;
+    --border: #e1e5ee;
+  }
+}
