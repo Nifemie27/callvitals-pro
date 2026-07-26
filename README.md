@@ -260,6 +260,8 @@ npm run test:coverage
 
 ## Deployment
 
+Full step-by-step instructions: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ### Docker Compose (self-contained)
 
 ```bash
@@ -270,10 +272,10 @@ Brings up Postgres, Redis, runs migrations and seeding, then starts the backend 
 
 ### Free-tier hosted deployment
 
-- **Frontend**: [Vercel](https://vercel.com) — static Vite build, `vercel.json` already configured for SPA routing.
-- **Backend**: [Render](https://render.com) — deploys directly from `backend/Dockerfile` (see `render.yaml`). Migrations and seeding run automatically on boot (idempotent, safe to repeat).
-- **Database**: [Neon](https://neon.tech) — serverless Postgres, free tier, no card required.
-- **Redis**: [Upstash](https://upstash.com) — serverless Redis, free tier, no card required.
+- **Frontend**: [Vercel](https://vercel.com): static Vite build, `vercel.json` already configured for SPA routing.
+- **Backend**: [Render](https://render.com): deploys directly from `backend/Dockerfile` (see `render.yaml`). Migrations and seeding run automatically on boot (idempotent, safe to repeat).
+- **Database**: [Neon](https://neon.tech): serverless Postgres, free tier, no card required.
+- **Redis**: [Upstash](https://upstash.com): serverless Redis, free tier, no card required.
 
 When frontend and backend are on different domains, set `COOKIE_SECURE=true` on the backend (switches the refresh cookie to `SameSite=None`) and set `CORS_ORIGIN` to the frontend's exact deployed origin.
 
