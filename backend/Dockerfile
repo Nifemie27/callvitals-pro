@@ -34,7 +34,7 @@ COPY --from=build /app/prisma ./prisma
 COPY package.json ./
 # The compiled server runs from dist/, but `prisma db seed` runs seed.ts
 # directly via tsx (see package.json's `prisma.seed`), and that script
-# imports a small helper from src/utils — so src/ needs to be present too.
+# imports a small helper from src/utils, so src/ needs to be present too.
 COPY --from=build /app/src ./src
 COPY --from=build /app/tsconfig.json ./tsconfig.json
 
@@ -44,4 +44,10 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD node -e "require('http').get('http://localhost:4000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
-CMD ["node", "dist/server.js"]
+# Migrations and seeding are idempotent (migrate deploy only applies pending
+# migrations; the seed script skips call records that already exist and
+# upserts users by email), so running both on every boot is safe. This lets
+# a single-service host like Render provision the database automatically,
+# without needing a separate one-shot job the way docker-compose's
+# dedicated migrate/seed services provide locally.
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/server.js"]

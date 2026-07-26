@@ -18,7 +18,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
+# 127.0.0.1, not localhost: this container's /etc/hosts resolves "localhost"
+# to the IPv6 loopback first, and nginx only listens on 0.0.0.0 (IPv4), so
+# wget-via-localhost gets a spurious connection-refused on every check.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost/ || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
