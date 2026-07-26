@@ -1,0 +1,127 @@
+// CallVitals Pro: database schema
+// PostgreSQL, accessed through Prisma.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ANALYST
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallStatus {
+  SUCCESS
+  FAILED
+}
+
+enum AuditAction {
+  USER_REGISTER
+  USER_LOGIN
+  USER_LOGIN_FAILED
+  USER_LOGOUT
+  USER_ROLE_CHANGED
+  USER_DEACTIVATED
+  USER_DELETED
+  CALL_CREATED
+  CALL_UPDATED
+  CALL_DELETED
+  CALLS_EXPORTED_CSV
+  CALLS_EXPORTED_PDF
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(ANALYST)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([role])
+  @@map("users")
+}
+
+/// One row per issued refresh token so sessions can be listed, rotated,
+/// and individually or globally revoked (secure logout / "log out everywhere").
+model RefreshToken {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique @map("token_hash")
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  replacedBy  String?   @map("replaced_by")
+  userAgent   String?   @map("user_agent")
+  ipAddress   String?   @map("ip_address")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+/// Call Data Records. Field names intentionally mirror the assignment's
+/// mock dataset (caller/receiver, city, direction, duration, cost) so the
+/// seed importer and the existing frontend types map onto it 1:1.
+model CallRecord {
+  id             String        @id @default(uuid())
+  callerName     String        @map("caller_name")
+  callerNumber   String        @map("caller_number")
+  receiverNumber String        @map("receiver_number")
+  city           String
+  direction      CallDirection
+  status         CallStatus
+  durationSeconds Int          @map("duration_seconds")
+  cost           Decimal       @db.Decimal(10, 2)
+  startTime      DateTime      @map("start_time")
+  endTime        DateTime      @map("end_time")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  // Composite/single-column indexes chosen to match the assignment's
+  // required filters (date range, caller/receiver, city) and the
+  // analytics aggregation queries (direction/status distribution,
+  // per-city and per-day rollups).
+  @@index([startTime])
+  @@index([city])
+  @@index([callerNumber])
+  @@index([receiverNumber])
+  @@index([direction])
+  @@index([status])
+  @@index([startTime, direction, status])
+  @@map("call_records")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  action     AuditAction
+  userId     String?     @map("user_id")
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  entityType String?     @map("entity_type")
+  entityId   String?     @map("entity_id")
+  metadata   Json?
+  ipAddress  String?     @map("ip_address")
+  userAgent  String?     @map("user_agent")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
