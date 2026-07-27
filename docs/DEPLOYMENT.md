@@ -30,7 +30,7 @@ No card required anywhere in this stack.
 
 1. Sign in at [console.upstash.com](https://console.upstash.com).
 2. **Create Database** → Regional type, a region close to where the backend will run, create.
-3. Open the database → **Details** tab → copy the **Redis Connection URL** (`rediss://default:<password>@<host>:<port>`). This is `REDIS_URL`.
+3. Open the database → **Details** tab → copy the **Redis Connection URL** (`rediss://default:<password>@<host>:<port>`, or sometimes shown as `redis://`). This is `REDIS_URL`. Either way, also set `REDIS_TLS=true`: Upstash requires a TLS handshake regardless of which scheme the copied string uses, and this can't be reliably inferred from the URL alone.
 
 ### 3. Render (backend)
 
