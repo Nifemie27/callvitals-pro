@@ -2,14 +2,40 @@ import type { ParsedQs } from "qs";
 import { AuditAction, Role } from "@prisma/client";
 import { userRepository, type SafeUser } from "@/repositories/user.repository";
 import { refreshTokenRepository } from "@/repositories/refreshToken.repository";
-import { BadRequestError, NotFoundError } from "@/errors/AppError";
+import { BadRequestError, ConflictError, NotFoundError } from "@/errors/AppError";
 import { buildPaginationMeta, type PaginationMeta } from "@/types/pagination";
 import { parsePagination } from "@/utils/queryParsing";
 import type { AuditActor } from "@/services/audit.service";
 import { auditService } from "@/services/audit.service";
-import type { UpdateUserBody } from "@/dto/user.dto";
+import { hashPassword } from "@/utils/password";
+import type { CreateUserBody, UpdateUserBody } from "@/dto/user.dto";
 
 class UserService {
+  async create(input: CreateUserBody, actor: AuditActor): Promise<SafeUser> {
+    const existing = await userRepository.findByEmail(input.email);
+    if (existing) {
+      throw new ConflictError("An account with this email already exists");
+    }
+
+    const passwordHash = await hashPassword(input.password);
+    const user = await userRepository.create({
+      email: input.email,
+      passwordHash,
+      name: input.name,
+      role: input.role,
+    });
+
+    await auditService.record(AuditAction.USER_CREATED_BY_ADMIN, actor, {
+      entityType: "User",
+      entityId: user.id,
+      metadata: { role: user.role },
+    });
+
+    const safeUser = await userRepository.findSafeById(user.id);
+    if (!safeUser) throw new NotFoundError("User");
+    return safeUser;
+  }
+
   async list(
     query: ParsedQs,
   ): Promise<{ items: SafeUser[]; pagination: PaginationMeta }> {

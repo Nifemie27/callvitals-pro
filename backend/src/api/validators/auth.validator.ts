@@ -1,14 +1,9 @@
 import { body } from "express-validator";
-
-const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+import { PASSWORD_RULE, PASSWORD_RULE_MESSAGE } from "@/constants/validation";
 
 export const registerValidator = [
   body("email").isEmail().withMessage("A valid email is required").normalizeEmail(),
-  body("password")
-    .matches(PASSWORD_RULE)
-    .withMessage(
-      "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number",
-    ),
+  body("password").matches(PASSWORD_RULE).withMessage(PASSWORD_RULE_MESSAGE),
   body("name")
     .trim()
     .isLength({ min: 2, max: 100 })

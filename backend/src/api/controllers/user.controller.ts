@@ -1,8 +1,14 @@
 import type { Request, Response } from "express";
 import { userService } from "@/services/user.service";
-import { sendNoContent, sendSuccess } from "@/utils/apiResponse";
+import { sendCreated, sendNoContent, sendSuccess } from "@/utils/apiResponse";
 import { actorFromRequest } from "@/services/audit.service";
-import type { UpdateUserBody } from "@/dto/user.dto";
+import type { CreateUserBody, UpdateUserBody } from "@/dto/user.dto";
+
+export async function create(req: Request, res: Response): Promise<void> {
+  const actor = actorFromRequest(req, req.user?.id);
+  const user = await userService.create(req.body as CreateUserBody, actor);
+  sendCreated(res, user, "User created");
+}
 
 export async function list(req: Request, res: Response): Promise<void> {
   const result = await userService.list(req.query);

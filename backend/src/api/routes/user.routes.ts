@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Role } from "@prisma/client";
 import * as userController from "@/api/controllers/user.controller";
 import {
+  createUserValidator,
   updateUserValidator,
   userIdParamValidator,
 } from "@/api/validators/user.validator";
@@ -12,6 +13,7 @@ export const userRouter = Router();
 
 userRouter.use(authenticate, authorize(Role.ADMIN));
 
+userRouter.post("/", createUserValidator, validate, userController.create);
 userRouter.get("/", userController.list);
 userRouter.get("/:id", userIdParamValidator, validate, userController.getById);
 userRouter.patch(

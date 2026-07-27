@@ -29,6 +29,75 @@ afterAll(async () => {
   await disconnectDatabase();
 });
 
+describe("POST /api/users", () => {
+  it("forbids a non-admin from creating a user", async () => {
+    const { token } = await loginAndGetToken(Role.ANALYST);
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        email: "new-admin@example.com",
+        password: "StrongPass1",
+        name: "New Admin",
+        role: Role.ADMIN,
+      });
+    expect(response.status).toBe(403);
+  });
+
+  it("allows an admin to create a new user with a chosen role", async () => {
+    const { token } = await loginAndGetToken(Role.ADMIN);
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        email: "new-admin@example.com",
+        password: "StrongPass1",
+        name: "New Admin",
+        role: Role.ADMIN,
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({ email: "new-admin@example.com", role: Role.ADMIN }),
+    );
+
+    const loginResponse = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "new-admin@example.com", password: "StrongPass1" });
+    expect(loginResponse.status).toBe(200);
+  });
+
+  it("rejects creating a user with an email already in use", async () => {
+    const { token } = await loginAndGetToken(Role.ADMIN);
+    const existing = await createTestUser({ role: Role.ANALYST });
+
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        email: existing.email,
+        password: "StrongPass1",
+        name: "Duplicate",
+        role: Role.ANALYST,
+      });
+    expect(response.status).toBe(409);
+  });
+
+  it("rejects a weak password with 422", async () => {
+    const { token } = await loginAndGetToken(Role.ADMIN);
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        email: "weak@example.com",
+        password: "weak",
+        name: "Weak",
+        role: Role.ANALYST,
+      });
+    expect(response.status).toBe(422);
+  });
+});
+
 describe("GET /api/users", () => {
   it("forbids a non-admin from listing users", async () => {
     const { token } = await loginAndGetToken(Role.ANALYST);
