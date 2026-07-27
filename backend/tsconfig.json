@@ -26,6 +26,6 @@
     "removeComments": true,
     "incremental": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "prisma/**/*.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts", "prisma/**/*.ts", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

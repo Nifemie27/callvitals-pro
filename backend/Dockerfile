@@ -8,7 +8,7 @@ WORKDIR /app
 
 # ---- deps: full install (incl. devDependencies) for building ----
 FROM base AS deps
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 RUN npm ci
 
@@ -20,7 +20,7 @@ RUN npm run build
 
 # ---- prod-deps: production-only install (prisma generate runs here too) ----
 FROM base AS prod-deps
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 RUN npm ci --omit=dev
 
@@ -31,10 +31,12 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 COPY package.json ./
 # The compiled server runs from dist/, but `prisma db seed` runs seed.ts
-# directly via tsx (see package.json's `prisma.seed`), and that script
-# imports a small helper from src/utils, so src/ needs to be present too.
+# directly via tsx (see prisma.config.ts's `migrations.seed`), and that
+# script imports a small helper from src/utils, so src/ needs to be present
+# too.
 COPY --from=build /app/src ./src
 COPY --from=build /app/tsconfig.json ./tsconfig.json
 
