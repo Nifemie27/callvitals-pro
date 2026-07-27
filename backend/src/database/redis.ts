@@ -13,6 +13,7 @@ export const redisClient = env.redis.enabled
       lazyConnect: true,
       maxRetriesPerRequest: 2,
       retryStrategy: (times) => Math.min(times * 200, 2000),
+      ...(env.redis.tls ? { tls: {} } : {}),
     })
   : null;
 

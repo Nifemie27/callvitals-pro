@@ -43,6 +43,12 @@ export const env = {
   redis: {
     url: optional("REDIS_URL", "redis://localhost:6379"),
     enabled: optional("REDIS_ENABLED", "true") === "true",
+    // Some managed Redis providers (Upstash included) require TLS even when
+    // the connection string they hand out uses the plain `redis://` scheme
+    // rather than `rediss://`, so this can't be reliably auto-detected from
+    // the URL alone. Local/Docker Redis has no TLS at all, so this defaults
+    // to off and must be opted into explicitly for those providers.
+    tls: optional("REDIS_TLS", "false") === "true",
     analyticsTtlSeconds: optionalInt("CACHE_ANALYTICS_TTL_SECONDS", 60),
     callsTtlSeconds: optionalInt("CACHE_CALLS_TTL_SECONDS", 30),
   },
