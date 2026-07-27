@@ -47,8 +47,8 @@ export function RegisterPage() {
           </div>
           <CardTitle className="text-lg">Create your account</CardTitle>
           <CardDescription>
-            New accounts are analysts by default &mdash; view-only access to analytics and call
-            records.
+            New accounts are analysts by default, with view-only access to analytics and
+            call records.
           </CardDescription>
         </CardHeader>
         <CardContent>
