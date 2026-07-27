@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { UserX, UserCheck, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { UserFormSheet } from "@/features/users/components/UserFormSheet";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -33,8 +34,9 @@ export function UsersPage() {
   const { user: currentUser } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { data, isPending, isError, error, refetch } = useUsers({ page, limit: 20, search });
-  const { update, remove } = useUserMutations();
+  const { create, update, remove } = useUserMutations();
 
   if (isError) {
     return (
@@ -53,19 +55,24 @@ export function UsersPage() {
       <PageHeader title="Users" description="Manage platform accounts and access levels." />
 
       <Card className="gap-0 overflow-hidden p-0">
-        <div className="flex items-center justify-between gap-3 border-b px-4.5 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4.5 py-3.5">
           <h2 className="text-[13.5px] font-semibold">All users</h2>
-          <Input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search name or email..."
-            aria-label="Search users"
-            className="w-56 text-xs"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search name or email..."
+              aria-label="Search users"
+              className="w-56 text-xs"
+            />
+            <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+              New user
+            </Button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -180,6 +187,13 @@ export function UsersPage() {
           <TablePagination pagination={data.pagination} onPageChange={setPage} />
         )}
       </Card>
+
+      <UserFormSheet
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        isSubmitting={create.isPending}
+        onSubmit={(values) => create.mutateAsync(values)}
+      />
     </div>
   );
 }
