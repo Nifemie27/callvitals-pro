@@ -7,12 +7,24 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import axios from "axios";
 import { toast } from "sonner";
 import * as authApi from "@/services/api/auth.api";
 import { setAccessToken } from "@/services/auth/tokenStore";
 import { setSessionExpiredHandler } from "@/services/api/client";
 import type { User } from "@/types/auth";
 import type { LoginInput, RegisterInput } from "@/services/api/auth.api";
+
+function isDefinitelyLoggedOut(error: unknown): boolean {
+  return (
+    axios.isAxiosError(error) &&
+    (error.response?.status === 401 || error.response?.status === 403)
+  );
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface AuthContextValue {
   user: User | null;
@@ -37,7 +49,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setAccessToken(session.accessToken);
         setUser(session.user);
-      } catch {
+      } catch (firstError) {
+        // A network error or timeout (e.g. a free-tier backend waking up
+        // from being idle) doesn't tell us the user is logged out, just
+        // that this attempt didn't complete in time. Give it one more try
+        // before falling back to the login page. A real 401/403 means the
+        // server actively rejected the refresh token, so there's no point
+        // retrying that.
+        if (!isDefinitelyLoggedOut(firstError) && !cancelled) {
+          try {
+            await wait(3000);
+            if (cancelled) return;
+            const session = await authApi.refresh();
+            if (!cancelled) {
+              setAccessToken(session.accessToken);
+              setUser(session.user);
+            }
+            return;
+          } catch {
+            // fall through to the logged-out state below
+          }
+        }
         if (cancelled) return;
         setAccessToken(null);
         setUser(null);

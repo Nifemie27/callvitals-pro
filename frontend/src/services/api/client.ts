@@ -28,7 +28,10 @@ export function setSessionExpiredHandler(handler: () => void): void {
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15_000,
+  // Generous enough to survive a cold start on free-tier hosting (Render's
+  // free plan spins the backend down after idle and can take a while to
+  // wake back up), rather than timing out mid-request under normal use.
+  timeout: 30_000,
   withCredentials: true,
 });
 
@@ -49,16 +52,29 @@ async function refreshAccessToken(): Promise<string | null> {
     .post<ApiSuccessEnvelope<AuthSession>>(
       `${API_BASE_URL}/auth/refresh`,
       {},
-      { withCredentials: true },
+      { withCredentials: true, timeout: 30_000 },
     )
     .then((response) => {
       const token = response.data.data.accessToken;
       setAccessToken(token);
       return token;
     })
-    .catch(() => {
-      setAccessToken(null);
-      onSessionExpired?.();
+    .catch((error: unknown) => {
+      // Only a genuine rejection from the server (refresh token missing,
+      // expired, revoked) means the session is actually over. A timeout,
+      // network error, or 5xx just means the request didn't complete, most
+      // often a free-tier backend waking up from being idle, and the
+      // user's actual session (the refresh cookie) may still be perfectly
+      // valid. Forcing a logout for that would be wrong, so only clear the
+      // session on a real 401/403 from the refresh endpoint itself.
+      const isRejectedByServer =
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403);
+
+      if (isRejectedByServer) {
+        setAccessToken(null);
+        onSessionExpired?.();
+      }
       return null;
     })
     .finally(() => {
