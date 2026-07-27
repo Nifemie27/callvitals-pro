@@ -39,6 +39,8 @@ COPY package.json ./
 # too.
 COPY --from=build /app/src ./src
 COPY --from=build /app/tsconfig.json ./tsconfig.json
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 USER appuser
 EXPOSE 4000
@@ -51,5 +53,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 # upserts users by email), so running both on every boot is safe. This lets
 # a single-service host like Render provision the database automatically,
 # without needing a separate one-shot job the way docker-compose's
-# dedicated migrate/seed services provide locally.
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/server.js"]
+# dedicated migrate/seed services provide locally. See docker-entrypoint.sh
+# for why migrate deploy specifically needs retries here.
+CMD ["./docker-entrypoint.sh"]
