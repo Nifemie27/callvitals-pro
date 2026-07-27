@@ -51,23 +51,27 @@ export const PDF_PAGE_MARGIN = 40;
 const PAGE_MARGIN = PDF_PAGE_MARGIN;
 const ROW_HEIGHT = 16;
 
+function formatPdfDate(date: Date): string {
+  return date.toISOString().slice(0, 16).replace("T", " ");
+}
+
+// Landscape A4 is 842pt wide; with the 40pt margin on each side (see
+// PDF_PAGE_MARGIN) that leaves 762pt to lay out across all columns below.
 const PDF_COLUMNS: Array<{
   label: string;
   width: number;
   get: (r: CallRecord) => string;
 }> = [
-  {
-    label: "Start Time",
-    width: 95,
-    get: (r) => r.startTime.toISOString().slice(0, 16).replace("T", " "),
-  },
-  { label: "Caller", width: 85, get: (r) => r.callerNumber },
-  { label: "Receiver", width: 85, get: (r) => r.receiverNumber },
-  { label: "City", width: 90, get: (r) => r.city },
-  { label: "Direction", width: 60, get: (r) => r.direction },
-  { label: "Status", width: 55, get: (r) => r.status },
-  { label: "Dur (s)", width: 45, get: (r) => String(r.durationSeconds) },
-  { label: "Cost", width: 50, get: (r) => `$${Number(r.cost).toFixed(2)}` },
+  { label: "Start Time", width: 90, get: (r) => formatPdfDate(r.startTime) },
+  { label: "End Time", width: 90, get: (r) => formatPdfDate(r.endTime) },
+  { label: "Caller Name", width: 95, get: (r) => r.callerName },
+  { label: "Caller #", width: 75, get: (r) => r.callerNumber },
+  { label: "Receiver #", width: 75, get: (r) => r.receiverNumber },
+  { label: "City", width: 75, get: (r) => r.city },
+  { label: "Direction", width: 55, get: (r) => r.direction },
+  { label: "Status", width: 50, get: (r) => r.status },
+  { label: "Dur (s)", width: 40, get: (r) => String(r.durationSeconds) },
+  { label: "Cost", width: 45, get: (r) => `$${Number(r.cost).toFixed(2)}` },
 ];
 
 function drawTableHeader(doc: PDFKit.PDFDocument, x: number, y: number): void {
