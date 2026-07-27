@@ -4,6 +4,10 @@ A production-grade telecom intelligence platform: a secure, authenticated backen
 
 This is the Week 3 evolution of [CallVitals](https://github.com/Nifemie27/callvitals), which fetched a mock API directly from the browser with no auth and no write path. CallVitals Pro adds the backend architecture, access control, and API-driven communication that a real internal telecom tool would need.
 
+**Live:** [callvitals-pro.vercel.app](https://callvitals-pro.vercel.app) &middot; API: [callvitals-pro-backend.onrender.com](https://callvitals-pro-backend.onrender.com/health)
+
+Demo accounts are listed below. The backend is on Render's free tier, so the first request after a period of inactivity takes ~30 seconds to wake up.
+
 ## Contents
 
 - [Architecture](#architecture)
@@ -166,6 +170,7 @@ See `backend/.env.example` and `frontend/.env.example` for the full list with de
 | `DATABASE_URL` | backend | PostgreSQL connection string |
 | `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | backend | Long random strings, must differ from each other |
 | `REDIS_URL` | backend | Redis connection string; caching disables itself gracefully if unreachable |
+| `REDIS_TLS` | backend | Set to `true` for managed Redis providers (e.g. Upstash) that require TLS even on a `redis://` connection string; leave `false` for local/Docker Redis |
 | `CORS_ORIGIN` | backend | The frontend's origin, required for credentialed cross-origin requests |
 | `COOKIE_SECURE` | backend | `true` in any deployment served over HTTPS (also switches the refresh cookie to `SameSite=None` for cross-domain setups) |
 | `VITE_API_BASE_URL` | frontend | The backend's `/api` base URL |

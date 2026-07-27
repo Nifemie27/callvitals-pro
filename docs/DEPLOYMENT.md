@@ -2,6 +2,8 @@
 
 Two deployment paths are supported. Pick one.
 
+Path B below is deployed and verified live at [callvitals-pro.vercel.app](https://callvitals-pro.vercel.app) (frontend, Vercel) and [callvitals-pro-backend.onrender.com](https://callvitals-pro-backend.onrender.com/health) (backend, Render), backed by Neon Postgres and Upstash Redis.
+
 ## Path A: Docker Compose (self-contained, any host with Docker)
 
 ```bash
