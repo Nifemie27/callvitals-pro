@@ -50,13 +50,18 @@ class CacheService {
     }
   }
 
-  /** Cache-aside helper: return the cached value, or compute, cache, and return it. */
+  /**
+   * Cache-aside helper: return the cached value, or compute and return it.
+   * The cache write happens in the background rather than being awaited,
+   * so a slow round trip to Redis never adds to the response's latency;
+   * `set` fails soft (see above) so there is nothing here to catch.
+   */
   async wrap<T>(key: string, ttlSeconds: number, compute: () => Promise<T>): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) return cached;
 
     const fresh = await compute();
-    await this.set(key, fresh, ttlSeconds);
+    void this.set(key, fresh, ttlSeconds);
     return fresh;
   }
 }
