@@ -26,14 +26,22 @@ export function setSessionExpiredHandler(handler: () => void): void {
   onSessionExpired = handler;
 }
 
+// Render's free plan spins the backend down after ~15 minutes of idle, and
+// waking it back up (plus Neon's own serverless Postgres cold start behind
+// it) can take upwards of 45-50s in the worst case. A shorter timeout here
+// turns a perfectly healthy wake-up into a false "network error" for the
+// user, so this needs to comfortably outlast that, not just a normal request.
+const COLD_START_TOLERANT_TIMEOUT = 60_000;
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  // Generous enough to survive a cold start on free-tier hosting (Render's
-  // free plan spins the backend down after idle and can take a while to
-  // wake back up), rather than timing out mid-request under normal use.
-  timeout: 30_000,
+  timeout: COLD_START_TOLERANT_TIMEOUT,
   withCredentials: true,
 });
+
+function isTimeout(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.code === "ECONNABORTED";
+}
 
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
@@ -52,7 +60,7 @@ async function refreshAccessToken(): Promise<string | null> {
     .post<ApiSuccessEnvelope<AuthSession>>(
       `${API_BASE_URL}/auth/refresh`,
       {},
-      { withCredentials: true, timeout: 30_000 },
+      { withCredentials: true, timeout: COLD_START_TOLERANT_TIMEOUT },
     )
     .then((response) => {
       const token = response.data.data.accessToken;
@@ -115,7 +123,9 @@ apiClient.interceptors.response.use(
       body?.message ??
       (error.response
         ? `Request failed with status ${error.response.status}`
-        : "Network error, the backend could not be reached");
+        : isTimeout(error)
+          ? "The server is waking up after being idle, this can take up to a minute. Please try again."
+          : "Network error, the backend could not be reached");
 
     return Promise.reject(new ApiError(message, error.response?.status, body?.errors));
   },
