@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Phone } from "lucide-react";
+import { Phone, Copy, Check, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -15,6 +15,71 @@ import loginHero from "@/assets/login-hero.jpg";
 
 interface LocationState {
   from?: { pathname: string };
+}
+
+interface DemoAccount {
+  role: string;
+  email: string;
+  password: string;
+}
+
+const DEMO_ACCOUNTS: DemoAccount[] = [
+  { role: "Admin", email: "admin@callvitals.dev", password: "Admin123!Change" },
+  { role: "Analyst", email: "analyst@callvitals.dev", password: "Analyst123!Change" },
+];
+
+function DemoAccountCard({ role, email, password }: DemoAccount) {
+  const [copiedField, setCopiedField] = useState<"email" | "password" | null>(null);
+
+  function copy(value: string, field: "email" | "password") {
+    void navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField((current) => (current === field ? null : current)), 1500);
+  }
+
+  return (
+    <div className="rounded-lg border bg-secondary/60 px-3 py-2.5 text-[11.5px]">
+      <p className="mb-1.5 font-medium text-foreground">{role}</p>
+
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+          <Mail className="size-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">{email}</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => copy(email, "email")}
+          aria-label={`Copy ${role} email`}
+          className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
+        >
+          {copiedField === "email" ? (
+            <Check className="size-3" aria-hidden="true" />
+          ) : (
+            <Copy className="size-3" aria-hidden="true" />
+          )}
+        </button>
+      </div>
+
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <Lock className="size-3 shrink-0" aria-hidden="true" />
+          ••••••••••
+        </span>
+        <button
+          type="button"
+          onClick={() => copy(password, "password")}
+          aria-label={`Copy ${role} password`}
+          className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
+        >
+          {copiedField === "password" ? (
+            <Check className="size-3" aria-hidden="true" />
+          ) : (
+            <Copy className="size-3" aria-hidden="true" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function LoginPage() {
@@ -101,10 +166,11 @@ export function LoginPage() {
               </Link>
             </p>
 
-            <div className="mt-5 rounded-lg border bg-secondary/60 px-3 py-2.5 text-[11.5px] leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Demo accounts:</span>{" "}
-              admin@callvitals.dev / Admin123!Change (full access) &middot;
-              analyst@callvitals.dev / Analyst123!Change (view-only)
+            <div className="mt-5 flex flex-col gap-2">
+              <p className="text-xs font-medium text-muted-foreground">Demo accounts</p>
+              {DEMO_ACCOUNTS.map((account) => (
+                <DemoAccountCard key={account.role} {...account} />
+              ))}
             </div>
           </CardContent>
         </Card>
